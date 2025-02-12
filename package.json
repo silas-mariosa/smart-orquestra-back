@@ -3,13 +3,24 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "introspect": "bunx drizzle-kit introspect",
+    "generate": "bunx drizzle-kit generate",
+    "studio": "bunx drizzle-kit studio --port 4001",
+    "migrate": "bunx run src/drizzle/migrate.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@libsql/client": "^0.14.0",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.3",
+    "elysia": "latest",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@types/pg": "^8.11.11",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.30.4",
+    "tsx": "^4.19.2"
   },
   "module": "src/index.js"
 }
