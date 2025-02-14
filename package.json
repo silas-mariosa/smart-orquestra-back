@@ -7,9 +7,12 @@
     "introspect": "bunx drizzle-kit introspect",
     "generate": "bunx drizzle-kit generate",
     "studio": "bunx drizzle-kit studio --port 4001",
-    "migrate": "bunx run src/drizzle/migrate.ts"
+    "migrate": "bunx drizzle-kit migrate"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/jwt": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.0",
     "@libsql/client": "^0.14.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
