@@ -3,9 +3,12 @@ import { db } from "../../db/drizzle-client";
 import { Auth, AuthType } from "../../db/schema";
 
 type Body = {
-  name: string;
   email: string;
   senha: string;
+};
+
+type SignUp = Body & {
+  name: string;
 };
 
 type Result<T> = {
@@ -13,7 +16,7 @@ type Result<T> = {
   error: string | null;
 };
 
-export const signUp = async (body: Body): Promise<Result<AuthType>> => {
+export const signUp = async (body: SignUp): Promise<Result<AuthType>> => {
   try {
     const [data] = await db
       .insert(Auth)
@@ -47,9 +50,6 @@ export const signIn = async (body: Body): Promise<Result<AuthType>> => {
     return { data: null, error: (error as Error).message };
   }
 };
-
-// codigo reduntante porque eh assim que estava antes
-export const signUpNewUser = signUp;
 
 export const updatePassword = async (body: Body): Promise<Result<AuthType>> => {
   try {

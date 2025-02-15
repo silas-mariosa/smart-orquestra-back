@@ -62,21 +62,27 @@ export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
       )
       .get(
         "/:id",
-        async ({ params: { id }, jwt, headers }) => {
+        async ({ params: { id }, jwt, headers, error }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
             const profile = await jwt.verify(authToken);
             if (!profile) {
-              throw new Error("Invalid Token");
+              return error(400, "Invalid Token");
             }
-            const gabinete_ID =
-              typeof profile.gabinete_ID === "string"
-                ? parseInt(profile.gabinete_ID, 10)
-                : profile.gabinete_ID;
-            if (isNaN(gabinete_ID)) {
-              throw new Error("Invalid gabinete_ID");
+            const orchestraId =
+              typeof profile.orchestraId === "string"
+                ? parseInt(profile.orchestraId, 10)
+                : profile.orchestraId;
+            if (isNaN(orchestraId)) {
+              return error(400, "Invalid orchestraId");
             }
-            return await getUsersById(Number(id), gabinete_ID);
+
+            const usuarioById = await getUsersById(Number(id), orchestraId);
+            if (!usuarioById) {
+              return error(400, "Usuario não encontrado!");
+            } else {
+              return usuarioById;
+            }
           } catch (error) {
             return error;
           }

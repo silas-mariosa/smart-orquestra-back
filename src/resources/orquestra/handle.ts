@@ -2,7 +2,7 @@ import { db } from "../../db/drizzle-client";
 import { Orchestra } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
-export const getOrchestra = async (orchestraId: number) => {
+export const getOrchestraByID = async (orchestraId: number) => {
   return await db.select().from(Orchestra).where(eq(Orchestra.id, orchestraId));
 };
 

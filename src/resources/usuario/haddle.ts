@@ -17,6 +17,10 @@ export const getUsersById = async (id: number, orchestraId: number) => {
     .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)));
 };
 
+export const getUsersByAuthId = async (authId: number) => {
+  return await db.select().from(Users).where(eq(Users.auth_id, authId));
+};
+
 export const postUsers = async ({
   auth_id,
   orchestraId,

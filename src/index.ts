@@ -4,6 +4,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { JWT } from "./jwt";
 import { auth } from "./resources/auth/route";
+import { usuario } from "./resources/usuario/route";
 
 const port = process.env.PORT || 4000;
 
@@ -16,6 +17,7 @@ export const app = new Elysia()
   )
   .use(JWT)
   .use(auth)
+  .use(usuario)
   .listen(port);
 
 export type App = typeof app;
