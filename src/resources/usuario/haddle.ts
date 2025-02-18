@@ -3,21 +3,21 @@ import { Users } from "../../db/schema";
 import { db } from "../../db/drizzle-client";
 import { insertAddress, updateAddress } from "../address/handle";
 
-export const getAllUsers = async (orchestraId: number) => {
+export const getAllUsers = async (orchestraId: string) => {
   return await db
     .select()
     .from(Users)
     .where(eq(Users.orchestraId, orchestraId));
 };
 
-export const getUsersById = async (id: number, orchestraId: number) => {
+export const getUsersById = async (id: string, orchestraId: string) => {
   return await db
     .select()
     .from(Users)
     .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)));
 };
 
-export const getUsersByAuthId = async (authId: number) => {
+export const getUsersByAuthId = async (authId: string) => {
   return await db.select().from(Users).where(eq(Users.auth_id, authId));
 };
 
@@ -29,12 +29,12 @@ export const postUsers = async ({
   instrumentId,
   groupId,
 }: {
-  auth_id: number;
-  orchestraId: number;
+  auth_id: string;
+  orchestraId: string;
   accessLevel: string;
   name: string;
-  instrumentId: number;
-  groupId: number;
+  instrumentId: string;
+  groupId: string;
 }) => {
   const address = {
     cep: "",
@@ -64,7 +64,7 @@ export const postUsers = async ({
 };
 
 export const updateUsers = async (
-  id: number,
+  id: string,
   name: string,
   brithday: string,
   cep: string,
@@ -93,7 +93,7 @@ export const updateUsers = async (
     const { address_id } = existingUsers;
 
     // Atualiza o endereço
-    await updateAddress(address_id || 0, {
+    await updateAddress(address_id as string, {
       cep,
       estado,
       cidade,
@@ -114,7 +114,7 @@ export const updateUsers = async (
     return error;
   }
 };
-export const deleteUsers = async (id: number, orchestraId: number) => {
+export const deleteUsers = async (id: string, orchestraId: string) => {
   return await db
     .delete(Users)
     .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)))

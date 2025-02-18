@@ -1,10 +1,12 @@
-import { relations, sql, InferSelectModel } from "drizzle-orm";
+import { relations, sql, InferSelectModel, or } from "drizzle-orm";
 import { int, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { z } from "zod";
 
 export const Auth = sqliteTable("auth", {
-  id: int().primaryKey({ autoIncrement: true }),
+  id: text()
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
   name: text("name").notNull(),
   password: text("password").notNull(),
   email: text("email").unique().notNull(),
@@ -20,15 +22,17 @@ export const Auth = sqliteTable("auth", {
 export type AuthType = InferSelectModel<typeof Auth>;
 
 export const Users = sqliteTable("user", {
-  id: int("id").primaryKey({ autoIncrement: true }),
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
   name: text("name").notNull(),
   brithday: text("brithday"),
   accessLevel: text(["Administrador", "Membro"]).notNull(),
-  addressId: int("address_id"),
-  orchestraId: int("orchestra_id"),
-  instrumentId: int("instrument_id"),
-  groupId: int("group_id"),
-  auth_id: int("auth_id").notNull(),
+  addressId: text("address_id"),
+  orchestraId: text("orchestra_id"),
+  instrumentId: text("instrument_id"),
+  groupId: text("group_id"),
+  auth_id: text("auth_id").notNull(),
   active: integer("active", { mode: "boolean" }).default(true),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: text("created_at")
@@ -50,7 +54,9 @@ export const userRelations = relations(Users, ({ one }) => ({
 }));
 
 export const Address = sqliteTable("address", {
-  id: int("id").primaryKey({ autoIncrement: true }),
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
   cep: text("cep"),
   estado: text("estado"),
   cidade: text("cidade"),
@@ -65,10 +71,12 @@ export const addressRelations = relations(Address, ({ one }) => ({
 }));
 
 export const Orchestra = sqliteTable("orchestra", {
-  id: int("id").primaryKey({ autoIncrement: true }),
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
   nome_orchestra: text("name").notNull(),
-  user_auth: int("auth_id").notNull(),
-  auth_id: int("auth_id").notNull(),
+  user_auth: text("auth_id").notNull(),
+  auth_id: text("auth_id").notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: text("created_at")
     .default(sql`(CURRENT_TIMESTAMP)`)
@@ -80,4 +88,81 @@ export const Orchestra = sqliteTable("orchestra", {
 
 export const orquetraRelations = relations(Orchestra, ({ many }) => ({
   members: many(Users),
+  instrumentos: many(Instruments),
 }));
+
+export const categoriesInstruments = sqliteTable("categories_instruments", {
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
+  name: text("name").notNull(),
+  orchestraId: text("orchestra_id").notNull(),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  createdAt: text("created_at")
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$onUpdate(
+    () => new Date()
+  ),
+});
+
+export const categoriesInstrumentsRelations = relations(
+  categoriesInstruments,
+  ({ one }) => ({
+    instruments: one(Instruments),
+    orchestra: one(Orchestra),
+  })
+);
+
+export const Instruments = sqliteTable("instruments", {
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
+  nameInstrument: text("name").notNull(),
+  orchestraId: text("orchestra_id").notNull(),
+  typeInstrument: text("type").notNull(),
+  categories: text("categories"),
+  description: text("description"),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  createdAt: text("created_at")
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$onUpdate(
+    () => new Date()
+  ),
+});
+
+export const instrumentsRelations = relations(Instruments, ({ one }) => ({
+  orchestra: one(Orchestra),
+  categories: one(categoriesInstruments),
+}));
+
+export const ListIstruments = sqliteTable("list_instruments", {
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
+  orchestraId: text("orchestra_id").notNull(),
+  instrumentId: text("instrument_id").notNull(),
+  user_id: text("user_id").notNull(),
+  owner: text("owner").notNull(),
+  position: text("position"),
+  serie: text("serie"),
+  brand: text("brand"),
+  model: text("model"),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  createdAt: text("created_at")
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$onUpdate(
+    () => new Date()
+  ),
+});
+
+export const listInstrumentsRelations = relations(
+  ListIstruments,
+  ({ one }) => ({
+    orchestra: one(Orchestra),
+    instrument: one(Instruments),
+    user: one(Users),
+  })
+);

@@ -3,12 +3,12 @@ import { getAllUsers, getUsersById, postUsers, updateUsers } from "./haddle";
 import { JWT } from "../../jwt";
 
 interface UsuarioRequestBody {
-  auth_id: number;
-  orchestraId: number;
+  auth_id: string;
+  orchestraId: string;
   accessLevel: "Administrador" | "Membro";
   name: string;
-  instrumentId: number;
-  groupId: number;
+  instrumentId: string;
+  groupId: string;
 }
 
 const swaggerGroup = {
@@ -17,43 +17,25 @@ const swaggerGroup = {
   },
 };
 
-export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
-  {
-    async beforeHandle({ set, jwt, headers, cookie: { authTokenEasy } }) {
-      const authToken = headers.authorization?.split(" ")[1];
-
-      if (!authToken) {
-        set.status = 401;
-        return "Unauthorized";
-      }
-
-      try {
-        await jwt.verify(authToken);
-      } catch (error) {
-        set.status = 401;
-        return "Invalid Token";
-      }
-    },
-  },
-  (app) =>
+export const usuario = new Elysia({ prefix: "/usuario" })
+  .use(JWT)
+  .guard((app) =>
     app
       .get(
         "/",
-        async ({ jwt, set, headers, cookie: { authTokenEasy } }) => {
+        async ({ jwt, error, headers }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
             const profile = await jwt.verify(authToken);
             if (!profile) {
               throw new Error("Invalid Token");
             }
-            const orchestraId =
-              typeof profile.orchestraId === "string"
-                ? parseInt(profile.orchestraId, 10)
-                : profile.orchestraId;
-            if (isNaN(orchestraId)) {
-              throw new Error("Invalid orchestraId");
+            const orchestraId = profile.orchestraId;
+
+            if (!orchestraId) {
+              error(400, "Invalid orchestraId");
             }
-            return await getAllUsers(orchestraId);
+            return await getAllUsers(orchestraId as string);
           } catch (error) {
             return error;
           }
@@ -69,15 +51,12 @@ export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
             if (!profile) {
               return error(400, "Invalid Token");
             }
-            const orchestraId =
-              typeof profile.orchestraId === "string"
-                ? parseInt(profile.orchestraId, 10)
-                : profile.orchestraId;
-            if (isNaN(orchestraId)) {
+            const orchestraId = profile.orchestraId;
+            if (!orchestraId) {
               return error(400, "Invalid orchestraId");
             }
 
-            const usuarioById = await getUsersById(Number(id), orchestraId);
+            const usuarioById = await getUsersById(id, orchestraId as string);
             if (!usuarioById) {
               return error(400, "Usuario não encontrado!");
             } else {
@@ -92,12 +71,12 @@ export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
       .guard(
         {
           body: t.Object({
-            auth_id: t.Numeric(),
-            orchestraId: t.Numeric(),
+            auth_id: t.String(),
+            orchestraId: t.String(),
             accessLevel: t.String(),
             name: t.String(),
-            instrumentId: t.Numeric(),
-            groupId: t.Numeric(),
+            instrumentId: t.String(),
+            groupId: t.String(),
           }),
         },
         (app) =>
@@ -149,7 +128,7 @@ export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
                 }
 
                 return await updateUsers(
-                  Number(id),
+                  id,
                   body.name,
                   body.brithday,
                   body.cep,
@@ -167,4 +146,4 @@ export const usuario = new Elysia({ prefix: "/usuario" }).use(JWT).guard(
             swaggerGroup
           )
       )
-);
+  );

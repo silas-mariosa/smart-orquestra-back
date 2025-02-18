@@ -3,6 +3,7 @@ import { JWT } from "../../jwt";
 import { signIn, signUp } from "./handler";
 import { getUsersByAuthId, postUsers } from "../usuario/haddle";
 import { getOrchestraByID, postOrchestra } from "../orquestra/handle";
+import { or } from "drizzle-orm";
 
 const swaggerGroup = {
   detail: {
@@ -15,91 +16,96 @@ export const auth = new Elysia({ prefix: "/auth" })
   .guard(
     {
       body: t.Object({
+        nameOrquestra: t.String(),
         name: t.String(),
         email: t.String(),
         senha: t.String(),
       }),
     },
     (app) =>
-      app
-        .post(
-          "/signup",
-          async ({ body, jwt, error }) => {
-            try {
-              const { data, error: signInError } = await signUp(body);
+      app.post(
+        "/signup",
+        async ({ body, jwt, error }) => {
+          try {
+            const { data, error: signInError } = await signUp(body);
 
-              if (signInError)
-                return error(400, "E-mail ou senha não conferem!");
+            if (signInError) return error(400, "E-mail ou senha não conferem!");
 
-              const authId = data?.id;
-              if (authId === undefined)
-                return error(400, "Authentication ID is undefined");
+            const authId = data?.id;
+            if (authId === undefined)
+              return error(400, "Authentication ID is undefined");
 
-              const name = data?.name;
-              if (name === undefined) return error(400, "Name is undefined");
+            const name = data?.name;
+            if (name === undefined) return error(400, "Name is undefined");
 
-              const [newOrchestra] = await postOrchestra({
-                nome_orchestra: body.name,
-                user_auth: authId,
-                auth_id: authId,
-              });
+            const [newOrchestra] = await postOrchestra({
+              nome_orchestra: body.nameOrquestra,
+              user_auth: authId,
+              auth_id: authId,
+            });
 
-              const newUser = await postUsers({
-                auth_id: authId,
-                orchestraId: newOrchestra.id,
-                accessLevel: "Administrador",
-                name: name,
-                instrumentId: 0,
-                groupId: 0,
-              });
-            } catch (error: Error | any) {
-              return error(400, "Erro ao criar usuário!");
+            const newUser = await postUsers({
+              auth_id: authId,
+              orchestraId: newOrchestra.id,
+              accessLevel: "Administrador",
+              name: name,
+              instrumentId: "0",
+              groupId: "0",
+            });
+          } catch (error: Error | any) {
+            return error(400, "Erro ao criar usuário!");
+          }
+        },
+        swaggerGroup
+      )
+  )
+  .guard(
+    {
+      body: t.Object({
+        name: t.String(),
+        email: t.String(),
+        senha: t.String(),
+      }),
+    },
+    (app) =>
+      app.post(
+        "/signupUsers",
+        async ({ body, jwt, headers, error }) => {
+          const authToken = headers.authorization?.split(" ")[1];
+          try {
+            const profile = await jwt.verify(authToken);
+            if (!profile) {
+              return error(400, "Invalid Token");
             }
-          },
-          swaggerGroup
-        )
-        .post(
-          "/signupUsers",
-          async ({ body, jwt, headers, error }) => {
-            const authToken = headers.authorization?.split(" ")[1];
-            try {
-              const profile = await jwt.verify(authToken);
-              if (!profile) {
-                return error(400, "Invalid Token");
-              }
-              const orchestraId =
-                typeof profile.orchestraId === "string"
-                  ? parseInt(profile.orchestraId, 10)
-                  : profile.orchestraId;
-              if (isNaN(orchestraId)) {
-                return error(400, "Invalid orchestraId");
-              }
-
-              const { data, error: signInError } = await signUp(body);
-              if (signInError)
-                return error(400, "E-mail ou senha não conferem!");
-
-              const authId = data?.id;
-              if (authId === undefined)
-                return error(400, "Authentication ID is undefined");
-
-              const name = data?.name;
-              if (name === undefined) return error(400, "Name is undefined");
-
-              const newUser = await postUsers({
-                auth_id: authId,
-                orchestraId: orchestraId,
-                accessLevel: "Membro",
-                name: name,
-                instrumentId: 0,
-                groupId: 0,
-              });
-            } catch (error: Error | any) {
-              return error(400, "Erro ao criar usuário!");
+            const orchestraId = profile.orchestraId;
+            console.log(orchestraId);
+            if (!orchestraId) {
+              return error(400, "Invalid orchestraId");
             }
-          },
-          swaggerGroup
-        )
+            const { data, error: signInError } = await signUp(body);
+            if (signInError) return error(400, "E-mail ou senha não conferem!");
+
+            const authId = data?.id;
+            if (authId === undefined)
+              return error(400, "Authentication ID is undefined");
+
+            const name = data?.name;
+            if (name === undefined) return error(400, "Name is undefined");
+
+            const newUser = await postUsers({
+              auth_id: authId,
+              orchestraId: orchestraId as string,
+              accessLevel: "Membro",
+              name: name,
+              instrumentId: "0",
+              groupId: "0",
+            });
+          } catch (error: Error | any) {
+            return error(400, "Erro ao criar usuário!");
+          }
+        },
+        swaggerGroup
+      )
   )
   .guard(
     {

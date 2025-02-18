@@ -15,6 +15,20 @@
       "when": 1739501943756,
       "tag": "0001_cloudy_zaladane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1739847639201,
+      "tag": "0002_complete_ultron",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1739849947668,
+      "tag": "0003_polite_morbius",
+      "breakpoints": true
     }
   ]
 }

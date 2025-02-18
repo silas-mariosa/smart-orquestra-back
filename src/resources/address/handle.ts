@@ -37,14 +37,14 @@ export const insertAddress = async ({
   return newAddress.id;
 };
 
-export const getAddressById = async (id: number) => {
+export const getAddressById = async (id: string) => {
   const [address] = await db.select().from(Address).where(eq(Address.id, id));
 
   return address;
 };
 
 export const updateAddress = async (
-  id: number,
+  id: string,
   { cep, estado, cidade, bairro, endereco, numero, complemento }: addressType
 ) => {
   await db
@@ -61,6 +61,6 @@ export const updateAddress = async (
     .where(eq(Address.id, id));
 };
 
-export const deleteAddress = async (id: number) => {
+export const deleteAddress = async (id: string) => {
   await db.delete(Address).where(eq(Address.id, id));
 };

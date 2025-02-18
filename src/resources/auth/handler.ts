@@ -9,6 +9,7 @@ type Body = {
 
 type SignUp = Body & {
   name: string;
+  nameOrquestra?: string;
 };
 
 type Result<T> = {
