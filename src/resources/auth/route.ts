@@ -49,8 +49,6 @@ export const auth = new Elysia({ prefix: "/auth" })
               orchestraId: newOrchestra.id,
               accessLevel: "Administrador",
               name: name,
-              instrumentId: "0",
-              groupId: "0",
             });
           } catch (error: Error | any) {
             return error(400, "Erro ao criar usuário!");
@@ -97,8 +95,6 @@ export const auth = new Elysia({ prefix: "/auth" })
               orchestraId: orchestraId as string,
               accessLevel: "Membro",
               name: name,
-              instrumentId: "0",
-              groupId: "0",
             });
           } catch (error: Error | any) {
             return error(400, "Erro ao criar usuário!");

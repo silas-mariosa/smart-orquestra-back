@@ -75,7 +75,7 @@ export const usuario = new Elysia({ prefix: "/usuario" })
             orchestraId: t.String(),
             accessLevel: t.String(),
             name: t.String(),
-            instrumentId: t.String(),
+            instrumentListId: t.String(),
             groupId: t.String(),
           }),
         },
@@ -104,8 +104,6 @@ export const usuario = new Elysia({ prefix: "/usuario" })
         {
           body: t.Object({
             name: t.String(),
-            orchestraId: t.Numeric(),
-            accessLevel: t.String(),
             brithday: t.String(),
             cep: t.String(),
             estado: t.String(),

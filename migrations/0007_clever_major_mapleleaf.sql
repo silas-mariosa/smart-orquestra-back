@@ -1,0 +1,1 @@
+ALTER TABLE `group_list` ADD `user_id` text NOT NULL;

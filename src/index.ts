@@ -7,6 +7,10 @@ import { auth } from "./resources/auth/route";
 import { usuario } from "./resources/usuario/route";
 import { instrumentos } from "./resources/intrumentos/route";
 import { categorias } from "./resources/categorias/route";
+import { louvores } from "./resources/louvores/route";
+import { grupos } from "./resources/grupos/route";
+import { grupoLista } from "./resources/grupo-lista/route";
+import { instrumentosList } from "./resources/instrumentos-lista/route";
 
 const port = process.env.PORT || 4000;
 
@@ -22,6 +26,10 @@ export const app = new Elysia()
   .use(usuario)
   .use(instrumentos)
   .use(categorias)
+  .use(louvores)
+  .use(grupos)
+  .use(grupoLista)
+  .use(instrumentosList)
   .listen(port);
 
 export type App = typeof app;

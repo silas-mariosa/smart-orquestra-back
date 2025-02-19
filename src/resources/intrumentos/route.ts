@@ -23,7 +23,7 @@ export const instrumentos = new Elysia({ prefix: "/instrumentos" })
     app
       .get(
         "/",
-        async ({ jwt, error, headers, cookie: { authTokenEasy } }) => {
+        async ({ jwt, error, headers }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
             const profile = await jwt.verify(authToken);
@@ -31,7 +31,7 @@ export const instrumentos = new Elysia({ prefix: "/instrumentos" })
               throw new Error("Invalid Token");
             }
             const orchestraId = profile.orchestraId;
-            if (orchestraId) {
+            if (!orchestraId) {
               return error(400, "Invalid orchestraId");
             }
             return await getAllInstruments(orchestraId as string);

@@ -26,15 +26,11 @@ export const postUsers = async ({
   orchestraId,
   accessLevel,
   name,
-  instrumentId,
-  groupId,
 }: {
   auth_id: string;
   orchestraId: string;
   accessLevel: string;
   name: string;
-  instrumentId: string;
-  groupId: string;
 }) => {
   const address = {
     cep: "",
@@ -55,8 +51,6 @@ export const postUsers = async ({
         accessLevel,
         name,
         addressId: addressId,
-        instrumentId,
-        groupId,
         active: true,
       })
       .returning()
