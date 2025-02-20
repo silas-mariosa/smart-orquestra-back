@@ -9,6 +9,7 @@
     "studio": "bunx drizzle-kit studio --port 4001",
     "migrate": "bunx drizzle-kit migrate"
   },
+  "packageManager": "bun@1.1.45",
   "dependencies": {
     "@elysiajs/cors": "^1.2.0",
     "@elysiajs/jwt": "^1.2.0",
