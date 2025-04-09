@@ -20,7 +20,7 @@ export const categorias = new Elysia({ prefix: "/categorias" })
     app
       .get(
         "/",
-        async ({ jwt, error, headers, cookie: { authTokenEasy } }) => {
+        async ({ jwt, error, headers }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
             const profile = await jwt.verify(authToken);

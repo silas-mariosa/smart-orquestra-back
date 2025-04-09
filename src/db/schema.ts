@@ -27,6 +27,7 @@ export const Users = sqliteTable("user", {
   brithday: text("brithday"),
   accessLevel: text(["Administrador", "Membro"]).notNull(),
   addressId: text("address_id"),
+  whatsapp: text("whatsapp"),
   orchestraId: text("orchestra_id"),
   auth_id: text("auth_id").notNull(),
   active: integer("active", { mode: "boolean" }).default(true),

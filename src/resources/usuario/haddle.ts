@@ -1,5 +1,5 @@
 import { eq, and, or } from "drizzle-orm";
-import { Users } from "../../db/schema";
+import { Address, Users } from "../../db/schema";
 import { db } from "../../db/drizzle-client";
 import { insertAddress, updateAddress } from "../address/handle";
 
@@ -14,7 +14,8 @@ export const getUsersById = async (id: string, orchestraId: string) => {
   return await db
     .select()
     .from(Users)
-    .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)));
+    .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)))
+    .innerJoin(Address, eq(Address.id, Users.addressId));
 };
 
 export const getUsersByAuthId = async (authId: string) => {
@@ -67,7 +68,8 @@ export const updateUsers = async (
   bairro: string,
   endereco: string,
   numero: string,
-  complemento: string
+  complemento: string,
+  whatsapp: string
 ) => {
   try {
     const [existingUsers] = await db
@@ -101,6 +103,7 @@ export const updateUsers = async (
       .set({
         name,
         brithday,
+        whatsapp,
       })
       .where(eq(Users.id, id))
       .returning();

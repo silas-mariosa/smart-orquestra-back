@@ -43,17 +43,21 @@ export const usuario = new Elysia({ prefix: "/usuario" })
         swaggerGroup
       )
       .get(
-        "/:id",
-        async ({ params: { id }, jwt, headers, error }) => {
+        "/",
+        async ({ jwt, headers, error }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
             const profile = await jwt.verify(authToken);
             if (!profile) {
-              return error(400, "Invalid Token");
+              return error(404, "Invalid Token");
+            }
+            const id = profile.userId as string;
+            if (!id) {
+              return error(404, "Invalid id");
             }
             const orchestraId = profile.orchestraId;
             if (!orchestraId) {
-              return error(400, "Invalid orchestraId");
+              return error(404, "Invalid orchestraId");
             }
 
             const usuarioById = await getUsersById(id, orchestraId as string);
@@ -105,6 +109,7 @@ export const usuario = new Elysia({ prefix: "/usuario" })
           body: t.Object({
             name: t.String(),
             brithday: t.String(),
+            whatsapp: t.String(),
             cep: t.String(),
             estado: t.String(),
             cidade: t.String(),
@@ -116,15 +121,19 @@ export const usuario = new Elysia({ prefix: "/usuario" })
         },
         (app) =>
           app.put(
-            "/updateUsuario/:id",
-            async ({ body, headers, jwt, params: { id } }) => {
+            "/update-usuario",
+            async ({ body, headers, jwt, error }) => {
               const authToken = headers.authorization?.split(" ")[1];
+              console.log("Body: ", body);
               try {
                 const profile = await jwt.verify(authToken);
                 if (!profile) {
-                  throw new Error("Invalid Token");
+                  return error(404, "Invalid Token");
                 }
-
+                const id = profile.userId as string;
+                if (!id) {
+                  return error(404, "Invalid id");
+                }
                 return await updateUsers(
                   id,
                   body.name,
@@ -135,7 +144,8 @@ export const usuario = new Elysia({ prefix: "/usuario" })
                   body.bairro,
                   body.endereco,
                   body.numero,
-                  body.complemento
+                  body.complemento,
+                  body.whatsapp
                 );
               } catch (error) {
                 return error;

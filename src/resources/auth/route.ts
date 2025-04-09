@@ -44,7 +44,7 @@ export const auth = new Elysia({ prefix: "/auth" })
               auth_id: authId,
             });
 
-            const newUser = await postUsers({
+            await postUsers({
               auth_id: authId,
               orchestraId: newOrchestra.id,
               accessLevel: "Administrador",
@@ -90,7 +90,7 @@ export const auth = new Elysia({ prefix: "/auth" })
             const name = data?.name;
             if (name === undefined) return error(400, "Name is undefined");
 
-            const newUser = await postUsers({
+            await postUsers({
               auth_id: authId,
               orchestraId: orchestraId as string,
               accessLevel: "Membro",
@@ -145,11 +145,8 @@ export const auth = new Elysia({ prefix: "/auth" })
               path: "/",
             });
 
-            const reponseToken = {
-              token: token,
-            };
             return {
-              reponseToken,
+              token,
             };
           } catch (error: Error | any) {
             return error(400, "Erro ao fazer login!");
