@@ -176,4 +176,20 @@ export const instrumentos = new Elysia({ prefix: "/instrumentos" })
             swaggerGroup
           )
       )
+      .delete(
+        "/:id",
+        async ({ params: { id }, error, headers, jwt }) => {
+          const authToken = headers.authorization?.split(" ")[1];
+          try {
+            const profile = await jwt.verify(authToken);
+            if (!profile) {
+              return error(404, "Invalid Token");
+            }
+            return await deleteInstrument(id);
+          } catch (error) {
+            return error;
+          }
+        },
+        swaggerGroup
+      )
   );

@@ -1,6 +1,7 @@
 import { db } from "../../db/drizzle-client";
-import { Instruments } from "../../db/schema";
-import { eq, and } from "drizzle-orm";
+import { categoriesInstruments, Instruments } from "../../db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { categorias } from "../categorias/route";
 
 type InstrumentType = {
   nameInstrument: string;
@@ -11,10 +12,30 @@ type InstrumentType = {
 };
 
 export const getAllInstruments = async (orchestraId: string) => {
-  return await db
+  const instruments = await db
     .select()
     .from(Instruments)
     .where(eq(Instruments.orchestraId, orchestraId));
+
+  const categoryIds = instruments
+    .map((i) => i.categories)
+    .filter((id): id is string => id !== null);
+
+  const categories = await db
+    .select()
+    .from(categoriesInstruments)
+    .where(inArray(categoriesInstruments.id, categoryIds));
+
+  const categoriesMap = Object.fromEntries(
+    categories.map((cat) => [cat.id, cat.name])
+  );
+
+  return instruments.map((instrument) => ({
+    ...instrument,
+    categories: instrument.categories
+      ? (categoriesMap[instrument.categories] ?? null)
+      : null,
+  }));
 };
 
 export const getInstrumentsByCategory = async (

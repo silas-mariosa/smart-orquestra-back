@@ -1,12 +1,64 @@
 import { db } from "../../db/drizzle-client";
 import { eq, and } from "drizzle-orm";
-import { Louvores } from "../../db/schema";
+import { categoriesInstruments, Instruments, Louvores } from "../../db/schema";
+import { getInstrumentByID } from "../intrumentos/handdle";
 
 export const getAllLouvores = async (orchestraId: string) => {
-  return await db
+  const louvores = await db
     .select()
     .from(Louvores)
     .where(eq(Louvores.orchestraId, orchestraId));
+
+  if (!louvores.length) return [];
+
+  const louvoresComInstrumentos = await Promise.all(
+    louvores.map(async (louvor) => {
+      if (!louvor.instrumentos) {
+        return {
+          ...louvor,
+          instrumentoCategories: "",
+          instrumentoTipo: "",
+        };
+      }
+
+      const [instrumentoById] = await db
+        .select()
+        .from(Instruments)
+        .where(
+          and(
+            eq(Instruments.id, louvor.instrumentos),
+            eq(Instruments.orchestraId, orchestraId)
+          )
+        );
+
+      if (!instrumentoById) {
+        return {
+          ...louvor,
+          instrumentoCategories: "",
+          instrumentoTipo: "",
+        };
+      }
+
+      const [categoriaById] = await db
+        .select()
+        .from(categoriesInstruments)
+        .where(
+          and(
+            eq(categoriesInstruments.id, instrumentoById.categories!),
+            eq(categoriesInstruments.orchestraId, orchestraId)
+          )
+        );
+
+      return {
+        ...louvor,
+        instrumentoName: instrumentoById.nameInstrument ?? "",
+        instrumentoCategories: categoriaById?.name ?? "",
+        instrumentoTipo: instrumentoById?.typeInstrument ?? "",
+      };
+    })
+  );
+
+  return louvoresComInstrumentos;
 };
 
 export const getLouvoresById = async (id: string, orchestraId: string) => {
