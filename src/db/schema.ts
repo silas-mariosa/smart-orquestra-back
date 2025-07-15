@@ -231,3 +231,22 @@ export const Grupos = sqliteTable("grupos", {
 export const groupsRelations = relations(Grupos, ({ one }) => ({
   orchestra: one(Orchestra),
 }));
+
+export const Ensaios = sqliteTable("ensaios", {
+  id: text("id")
+    .primaryKey()
+    .$default(() => sql`(lower(hex(randomblob(16))))`),
+  title: text("title").notNull(),
+  description: text("description"),
+  start: text("start").notNull(),
+  end: text("end"),
+  date: text("date"), // Data manual definida pelo usuário
+  orchestraId: text("orchestra_id").notNull(),
+  createdAt: text("created_at")
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$onUpdate(
+    () => new Date()
+  ),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
+});

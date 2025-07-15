@@ -1,6 +1,15 @@
 import { Elysia, t } from "elysia";
-import { getAllUsers, getUsersById, postUsers, updateUsers } from "./haddle";
+import {
+  getAllUsers,
+  getUsersById,
+  postUsers,
+  updateUsers,
+  postUsersWithRandomPassword,
+  generateNewPasswordForUser,
+  updateUserPassword,
+} from "./haddle";
 import { JWT } from "../../jwt";
+import { getInstrumentListByUserID } from "../instrumentos-lista/handle";
 
 interface UsuarioRequestBody {
   auth_id: string;
@@ -35,7 +44,20 @@ export const usuario = new Elysia({ prefix: "/usuario" })
             if (!orchestraId) {
               error(400, "Invalid orchestraId");
             }
-            return await getAllUsers(orchestraId as string);
+            const usuarios = await getAllUsers(orchestraId as string);
+            // Para cada usuário, buscar instrumentos
+            const usuariosComInstrumentos = await Promise.all(
+              usuarios.map(async (usuario: any) => {
+                const instrumentos = await getInstrumentListByUserID(
+                  usuario.id
+                );
+                return {
+                  usuario,
+                  instrumentos: instrumentos || [],
+                };
+              })
+            );
+            return usuariosComInstrumentos;
           } catch (error) {
             return error;
           }
@@ -43,7 +65,7 @@ export const usuario = new Elysia({ prefix: "/usuario" })
         swaggerGroup
       )
       .get(
-        "/",
+        "/me",
         async ({ jwt, headers, error }) => {
           const authToken = headers.authorization?.split(" ")[1];
           try {
@@ -153,5 +175,145 @@ export const usuario = new Elysia({ prefix: "/usuario" })
             },
             swaggerGroup
           )
+      )
+      .guard(
+        {
+          body: t.Object({
+            name: t.String(),
+            email: t.String(),
+            accessLevel: t.String(),
+          }),
+        },
+        (app) =>
+          app.post(
+            "/create-with-password",
+            async ({ body, headers, jwt, error }) => {
+              const authToken = headers.authorization?.split(" ")[1];
+              try {
+                const profile = await jwt.verify(authToken);
+                if (!profile) {
+                  return error(400, "Invalid Token");
+                }
+
+                // Verificar se o usuário é administrador
+                const accessLevel = profile.accessLevel;
+                if (accessLevel !== "Administrador") {
+                  return error(
+                    403,
+                    "Acesso negado. Apenas administradores podem criar usuários."
+                  );
+                }
+
+                const orchestraId = profile.orchestraId;
+                if (!orchestraId) {
+                  return error(400, "Invalid orchestraId");
+                }
+
+                const result = await postUsersWithRandomPassword({
+                  orchestraId: orchestraId as string,
+                  accessLevel: body.accessLevel,
+                  name: body.name,
+                  email: body.email,
+                });
+
+                return {
+                  message: "Usuário criado com sucesso",
+                  user: result.user,
+                  password: result.password, // Senha gerada para ser passada ao usuário
+                };
+              } catch (error) {
+                return error;
+              }
+            },
+            swaggerGroup
+          )
+      )
+      .guard(
+        {
+          body: t.Object({
+            newPassword: t.String(),
+          }),
+        },
+        (app) =>
+          app.put(
+            "/update-password",
+            async ({ body, headers, jwt, error }) => {
+              const authToken = headers.authorization?.split(" ")[1];
+              try {
+                const profile = await jwt.verify(authToken);
+                if (!profile) {
+                  return error(404, "Invalid Token");
+                }
+                const userId = profile.userId as string;
+                if (!userId) {
+                  return error(404, "Invalid userId");
+                }
+                const orchestraID = profile.orchestraId as string;
+                if (!orchestraID) {
+                  return error(404, "Invalid orchestraID");
+                }
+                // Buscar o usuário para pegar o auth_id
+                const [usuario] = await getUsersById(userId, orchestraID);
+                if (!usuario) {
+                  return error(
+                    404,
+                    "Usuário não encontrado ou auth_id ausente"
+                  );
+                }
+                const auth_id = String(usuario.user.auth_id);
+                const result = await updateUserPassword(
+                  auth_id,
+                  body.newPassword
+                );
+                if (!result) {
+                  return error(400, "Erro ao atualizar senha");
+                }
+                return { message: "Senha atualizada com sucesso" };
+              } catch (error) {
+                return error;
+              }
+            },
+            swaggerGroup
+          )
+      )
+      .post(
+        "/:id/reset-password",
+        async ({ params: { id }, headers, jwt, error }) => {
+          const authToken = headers.authorization?.split(" ")[1];
+          try {
+            const profile = await jwt.verify(authToken);
+            if (!profile) {
+              return error(400, "Invalid Token");
+            }
+
+            // Verificar se o usuário é administrador
+            const accessLevel = profile.accessLevel;
+            if (accessLevel !== "Administrador") {
+              return error(
+                403,
+                "Acesso negado. Apenas administradores podem redefinir senhas."
+              );
+            }
+
+            const orchestraId = profile.orchestraId;
+            if (!orchestraId) {
+              return error(400, "Invalid orchestraId");
+            }
+
+            const result = await generateNewPasswordForUser(
+              id,
+              orchestraId as string
+            );
+
+            return {
+              message: "Senha redefinida com sucesso",
+              user: result.user,
+              newPassword: result.newPassword, // Nova senha para ser passada ao usuário
+            };
+          } catch (error) {
+            return error;
+          }
+        },
+        swaggerGroup
       )
   );

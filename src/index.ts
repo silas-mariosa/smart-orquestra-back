@@ -11,6 +11,8 @@ import { louvores } from "./resources/louvores/route";
 import { grupos } from "./resources/grupos/route";
 import { grupoLista } from "./resources/grupo-lista/route";
 import { instrumentosList } from "./resources/instrumentos-lista/route";
+import { dashboard } from "./resources/dashboard/route";
+import { ensaios } from "./resources/ensaios/route";
 
 const port = process.env.PORT || 4000;
 
@@ -30,6 +32,8 @@ export const app = new Elysia()
   .use(grupos)
   .use(grupoLista)
   .use(instrumentosList)
+  .use(dashboard)
+  .use(ensaios)
   .listen(port);
 
 export type App = typeof app;

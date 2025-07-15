@@ -1,5 +1,5 @@
 import { eq, and, or } from "drizzle-orm";
-import { Address, Users } from "../../db/schema";
+import { Address, Users, Auth } from "../../db/schema";
 import { db } from "../../db/drizzle-client";
 import { insertAddress, updateAddress } from "../address/handle";
 
@@ -116,4 +116,141 @@ export const deleteUsers = async (id: string, orchestraId: string) => {
     .delete(Users)
     .where(and(eq(Users.id, id), eq(Users.orchestraId, orchestraId)))
     .returning();
+};
+
+// Função para gerar senha aleatória
+const generateRandomPassword = (): string => {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
+// Criar usuário com senha aleatória
+export const postUsersWithRandomPassword = async ({
+  orchestraId,
+  accessLevel,
+  name,
+  email,
+}: {
+  orchestraId: string;
+  accessLevel: string;
+  name: string;
+  email: string;
+}) => {
+  try {
+    // Gerar senha aleatória
+    const randomPassword = generateRandomPassword();
+
+    // Criar registro de autenticação
+    const [authData] = await db
+      .insert(Auth)
+      .values({
+        name: name,
+        email: email,
+        password: await Bun.password.hash(randomPassword),
+      })
+      .returning();
+
+    if (!authData) {
+      throw new Error("Erro ao criar registro de autenticação");
+    }
+
+    // Criar endereço padrão
+    const address = {
+      cep: "",
+      estado: "",
+      cidade: "",
+      bairro: "",
+      endereco: "",
+      numero: "",
+      complemento: "",
+    };
+    const addressId = await insertAddress(address);
+
+    // Criar usuário
+    const [userData] = await db
+      .insert(Users)
+      .values({
+        auth_id: authData.id,
+        orchestraId,
+        accessLevel,
+        name,
+        addressId: addressId,
+        active: true,
+      })
+      .returning();
+
+    return {
+      user: userData,
+      password: randomPassword, // Retorna a senha para ser passada ao usuário
+    };
+  } catch (error) {
+    console.error("Erro ao criar usuário com senha aleatória:", error);
+    throw error;
+  }
+};
+
+// Gerar nova senha para usuário existente
+export const generateNewPasswordForUser = async (
+  userId: string,
+  orchestraId: string
+) => {
+  try {
+    // Verificar se o usuário existe e pertence à orquestra
+    const [user] = await db
+      .select()
+      .from(Users)
+      .where(and(eq(Users.id, userId), eq(Users.orchestraId, orchestraId)));
+
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+
+    // Gerar nova senha aleatória
+    const newPassword = generateRandomPassword();
+
+    // Atualizar senha no registro de autenticação
+    const [authData] = await db
+      .update(Auth)
+      .set({
+        password: await Bun.password.hash(newPassword),
+      })
+      .where(eq(Auth.id, user.auth_id))
+      .returning();
+
+    if (!authData) {
+      throw new Error("Erro ao atualizar senha");
+    }
+
+    return {
+      user: user,
+      newPassword: newPassword, // Retorna a nova senha para ser passada ao usuário
+    };
+  } catch (error) {
+    console.error("Erro ao gerar nova senha:", error);
+    throw error;
+  }
+};
+
+export const updateUserPassword = async (
+  auth_id: string,
+  newPassword: string
+) => {
+  console.log("auth_id: ", auth_id);
+  console.log("newPassword: ", newPassword);
+  try {
+    const [updated] = await db
+      .update(Auth)
+      .set({ password: await Bun.password.hash(newPassword) })
+      .where(eq(Auth.id, auth_id))
+      .returning();
+    return !!updated;
+  } catch (error) {
+    console.error("Erro ao atualizar senha:", error);
+    return false;
+  }
 };
