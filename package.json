@@ -7,7 +7,8 @@
     "introspect": "bunx drizzle-kit introspect",
     "generate": "bunx drizzle-kit generate",
     "studio": "bunx drizzle-kit studio --port 4001",
-    "migrate": "bunx drizzle-kit migrate"
+    "migrate": "bunx drizzle-kit migrate",
+    "start": "bun run src/index.ts"
   },
   "packageManager": "bun@1.1.45",
   "dependencies": {
