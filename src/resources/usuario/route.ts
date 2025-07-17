@@ -9,7 +9,7 @@ import {
   updateUserPassword,
 } from "./haddle";
 import { JWT } from "../../jwt";
-import { getInstrumentListByUserID } from "../instrumentos-lista/handle";
+import { getInstrumentListByUserIDWithName } from "../instrumentos-lista/handle";
 
 interface UsuarioRequestBody {
   auth_id: string;
@@ -48,7 +48,7 @@ export const usuario = new Elysia({ prefix: "/usuario" })
             // Para cada usuário, buscar instrumentos
             const usuariosComInstrumentos = await Promise.all(
               usuarios.map(async (usuario: any) => {
-                const instrumentos = await getInstrumentListByUserID(
+                const instrumentos = await getInstrumentListByUserIDWithName(
                   usuario.id
                 );
                 return {
